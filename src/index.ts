@@ -17,3 +17,14 @@ export function refs(target: any, name: string, i: number) {
         e && (target[name][i] = e);
     };
 }
+
+/* Class Decorator */
+export function Properties(properties: any[], action: (prototype: any, property: string) => any) {
+    return (component: any) => {
+        const prototype = component.prototype;
+
+        properties.forEach(property => {
+            action(prototype, property);
+        });
+    };
+}
