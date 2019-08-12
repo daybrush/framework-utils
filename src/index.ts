@@ -1,5 +1,7 @@
 export function prefixNames(prefix: string, ...classNames: string[]) {
-    return classNames.map(className => className.split(" ").map(name => `${prefix}${name}`).join(" ")).join(" ");
+    return classNames.map(
+        className => className.split(" ").map(name => name ? `${prefix}${name}` : "").join(" "),
+    ).join(" ");
 }
 
 export function prefixCSS(prefix: string, css: string) {
