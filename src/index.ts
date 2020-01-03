@@ -31,7 +31,7 @@ export function Properties(properties: any[], action: (prototype: any, property:
     };
 }
 
-/* Class Decorator */
+/* Property Decorator */
 export function withMethods(methods: string[]) {
     return (prototype: any, propertyName: string) => {
         methods.forEach(name => {
