@@ -30,3 +30,28 @@ export function Properties(properties: any[], action: (prototype: any, property:
         });
     };
 }
+
+/* Class Decorator */
+export function withMethods(methods: string[]) {
+    return (prototype: any, propertyName: string) => {
+        methods.forEach(name => {
+            if (prototype[name]) {
+                return;
+            }
+            prototype[name] = function(...args) {
+                const result = this[propertyName][name](...args);
+
+                if (result === this[propertyName]) {
+                    return this;
+                } else {
+                    return result;
+                }
+            };
+        });
+    };
+}
+
+export type ParametersType<T, R> = T extends (...params: infer U) => any ? (...params: U) => R : never;
+export type MethodInterface<T, U extends T, R extends any> = {
+    [key in keyof T]: T[key] extends (...params: any[]) => U ? ParametersType<T[key], R> : T[key]
+};
