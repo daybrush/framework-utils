@@ -52,6 +52,19 @@ export function withMethods(methods: string[]) {
 }
 
 export type ParametersType<T, R> = T extends (...params: infer U) => any ? (...params: U) => R : never;
-export type MethodInterface<T, U extends T, R extends any> = {
-    [key in keyof T]: T[key] extends (...params: any[]) => U ? ParametersType<T[key], R> : T[key]
+export type ExcludeInterface<T, U> = {
+    [key in (Exclude<keyof T, keyof U>)]: T[key];
+};
+export type Entries<T extends { [key: string]: any }, U = keyof T> = U extends string ? [U, T[U]] : never;
+export type ReverseKey<T extends string, U extends { [key: string]: any }, E = Entries<U>>
+    = E extends [infer K, T] ? K : never;
+
+export type MethodInterface<T, U extends T, R extends any, Duplicate extends { [key: string]: any } = {}> = {
+    [key in keyof ExcludeInterface<T, Duplicate>]:
+        T[key] extends (...params: any[]) => U ? ParametersType<T[key], R> : T[key];
+} & {
+    [key in Duplicate[keyof Duplicate]]:
+        T[ReverseKey<key, Duplicate> & keyof T] extends (...params: any[]) => U
+            ? ParametersType<T[ReverseKey<key, Duplicate> & keyof T], R>
+            : T[ReverseKey<key, Duplicate> & keyof T];
 };
