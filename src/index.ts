@@ -32,13 +32,15 @@ export function Properties(properties: any[], action: (prototype: any, property:
 }
 
 /* Property Decorator */
-export function withMethods(methods: string[]) {
+export function withMethods(methods: string[], duplicate: { [name: string]: string } = {}) {
     return (prototype: any, propertyName: string) => {
         methods.forEach(name => {
-            if (prototype[name]) {
+            const methodName = duplicate[name] || name;
+
+            if (prototype[methodName]) {
                 return;
             }
-            prototype[name] = function(...args) {
+            prototype[methodName] = function(...args) {
                 const result = this[propertyName][name](...args);
 
                 if (result === this[propertyName]) {
