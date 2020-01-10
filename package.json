@@ -1,6 +1,6 @@
 {
   "name": "framework-utils",
-  "version": "0.3.3",
+  "version": "0.3.4",
   "description": "utils for framework",
   "main": "./dist/utils.cjs.js",
   "module": "./dist/utils.esm.js",

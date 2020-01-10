@@ -5,7 +5,9 @@ export function prefixNames(prefix: string, ...classNames: string[]) {
 }
 
 export function prefixCSS(prefix: string, css: string) {
-    return css.replace(/\.([^{,\s\d.]+)/g, `.${prefix}$1`);
+    return css.replace(/([^}{]*){/mg, (_, selector) => {
+        return `${selector.replace(/\.([^{,\s\d.]+)/g, `.${prefix}$1`)}{`;
+    });
 }
 
 /* react */
