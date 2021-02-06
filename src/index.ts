@@ -1,11 +1,16 @@
 export function prefixNames(prefix: string, ...classNames: string[]) {
-    return classNames.map(
-        className => className.split(" ").map(name => name ? `${prefix}${name}` : "").join(" "),
-    ).join(" ");
+    return classNames
+        .map((className) =>
+            className
+                .split(" ")
+                .map((name) => (name ? `${prefix}${name}` : ""))
+                .join(" ")
+        )
+        .join(" ");
 }
 
 export function prefixCSS(prefix: string, css: string) {
-    return css.replace(/([^}{]*){/mg, (_, selector) => {
+    return css.replace(/([^}{]*){/gm, (_, selector) => {
         return `${selector.replace(/\.([^{,\s\d.]+)/g, `.${prefix}$1`)}{`;
     });
 }
@@ -23,26 +28,32 @@ export function refs(target: any, name: string, i: number) {
 }
 
 /* Class Decorator */
-export function Properties(properties: any[], action: (prototype: any, property: string) => any) {
+export function Properties(
+    properties: any[],
+    action: (prototype: any, property: string) => any
+) {
     return (component: any) => {
         const prototype = component.prototype;
 
-        properties.forEach(property => {
+        properties.forEach((property) => {
             action(prototype, property);
         });
     };
 }
 
 /* Property Decorator */
-export function withMethods(methods: string[], duplicate: { [name: string]: string } = {}) {
+export function withMethods(
+    methods: readonly string[],
+    duplicate: { [name: string]: string } = {}
+) {
     return (prototype: any, propertyName: string) => {
-        methods.forEach(name => {
+        methods.forEach((name) => {
             const methodName = duplicate[name] || name;
 
-            if (prototype[methodName]) {
+            if (methodName in prototype) {
                 return;
             }
-            prototype[methodName] = function(...args) {
+            prototype[methodName] = function (...args) {
                 const result = this[propertyName][name](...args);
 
                 if (result === this[propertyName]) {
@@ -55,20 +66,59 @@ export function withMethods(methods: string[], duplicate: { [name: string]: stri
     };
 }
 
-export type ParametersType<T, R> = T extends (...params: infer U) => any ? (...params: U) => R : never;
-export type ExcludeInterface<T, U> = {
-    [key in (Exclude<keyof T, keyof U>)]: T[key];
-};
-export type Entries<T extends { [key: string]: any }, U = keyof T> = U extends string ? [U, T[U]] : never;
-export type ReverseKey<T extends string, U extends { [key: string]: any }, E = Entries<U>>
-    = E extends [infer K, T] ? K : never;
+export type ParametersType<Func, Return> = Func extends (
+    ...params: infer Params
+) => any
+    ? (...params: Params) => Return
+    : never;
 
-export type MethodInterface<T, U extends T, R extends any, Duplicate extends { [key: string]: any } = {}> = {
-    [key in keyof ExcludeInterface<T, Duplicate>]:
-        T[key] extends (...params: any[]) => U ? ParametersType<T[key], R> : T[key];
-} & {
-    [key in Duplicate[keyof Duplicate]]:
-        T[ReverseKey<key, Duplicate> & keyof T] extends (...params: any[]) => U
-            ? ParametersType<T[ReverseKey<key, Duplicate> & keyof T], R>
-            : T[ReverseKey<key, Duplicate> & keyof T];
+export type ExcludeInterface<Obj1, Obj2> = {
+    [key in Exclude<keyof Obj1, keyof Obj2>]: Obj1[key];
 };
+
+export type Entries<
+    Obj extends { [key: string]: any },
+    Key = keyof Obj
+> = Key extends string ? [Key, Obj[Key]] : never;
+
+export type ReverseKey<
+    Key extends string,
+    Obj extends { [key: string]: any },
+    E = Entries<Obj>
+> = E extends [infer Value, Key] ? Value : never;
+
+export type UniqueMethodInterface<
+    Methods,
+    Target extends Methods,
+    ReturnTarget extends any,
+    Duplicate extends { [key: string]: any }
+> = {
+    [key in keyof ExcludeInterface<Methods, Duplicate>]: Methods[key] extends (
+        ...params: any[]
+    ) => Target
+        ? ParametersType<Methods[key], ReturnTarget>
+        : Methods[key];
+};
+
+export type ChangedMethodInterface<
+    Methods,
+    Target extends Methods,
+    ReturnTarget extends any,
+    Duplicate extends { [key: string]: any }
+> = {
+    [key in Duplicate[keyof Duplicate]]: Methods[ReverseKey<key, Duplicate> &
+        keyof Methods] extends (...params: any[]) => Target
+        ? ParametersType<
+              Methods[ReverseKey<key, Duplicate> & keyof Methods],
+              ReturnTarget
+          >
+        : Methods[ReverseKey<key, Duplicate> & keyof Methods];
+};
+
+export type MethodInterface<
+    Methods,
+    Target extends Methods,
+    ReturnTarget extends any,
+    Duplicate extends { [key: string]: any } = {}
+> = UniqueMethodInterface<Methods, Target, ReturnTarget, Duplicate> &
+    ChangedMethodInterface<Methods, Target, ReturnTarget, Duplicate>;
