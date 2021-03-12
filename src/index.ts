@@ -76,6 +76,17 @@ export type ExcludeInterface<Obj1, Obj2> = {
     [key in Exclude<keyof Obj1, keyof Obj2>]: Obj1[key];
 };
 
+export type EntriesObject<T> = {
+    [key in keyof T]: [key, Readonly<T[key]>];
+};
+export type FindKey<E, V> = E extends [infer U, V] ? U & string : never;
+export type InvertObject<
+    T extends Record<string, any>,
+    En extends Record<string, any> = EntriesObject<T>
+    > = {
+        [key in En[keyof En][1]]: FindKey<En[keyof En], key>
+    };
+
 export type Entries<
     Obj extends { [key: string]: any },
     Key = keyof Obj
